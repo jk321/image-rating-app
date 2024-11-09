@@ -7,7 +7,7 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // JSONbin settings
-const JSONBIN_URL = "https://api.jsonbin.io/v3/b/672f186cacd3cb34a8a5719e";
+const JSONBIN_URL = "https://api.jsonbin.io/v3/b/672f1fdbad19ca34f8c6fb48";
 const JSONBIN_API_KEY = "$2a$10$WWJZAd9FY4XjoOVyMtIRauSZjVfF/T2jRCL/QHY0QOIO8zm/VU.y2";
 
 // Fetch data from JSONbin (GET request)
