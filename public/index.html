@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entropie stránky</title>
+    <style>
+        body { 
+            text-align: center; 
+            font-family: Arial, sans-serif; 
+            background-color: #f9f9f9; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
+        
+        .container {
+            max-heigth: 800px;
+            width: 650px;
+            padding: 5px;
+            border-radius: 5px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        img { 
+            max-height: 900px; 
+            border-radius: 5px; 
+            margin-bottom: 10px; 
+        }
+
+        .rating-buttons { 
+            display: flex; 
+            justify-content: center; 
+            gap: 10px; 
+        }
+
+        button { 
+            padding: 10px 15px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 5px; 
+            background-color: #007bff; 
+            color: #fff; 
+            transition: background-color 0.3s ease; 
+        }
+
+        button:hover { 
+            background-color: #0056b3; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Kodikologu, zhodnoť entropii stránky!</h1>
+        <img id="randomImage" src="" alt="Random Image" />
+        
+        <div class="rating-buttons">
+            <button onclick="rateImage(1)">1</button>
+            <button onclick="rateImage(2)">2</button>
+            <button onclick="rateImage(3)">3</button>
+            <button onclick="rateImage(4)">4</button>
+            <button onclick="rateImage(5)">5</button>
+        </div>
+    </div>
+
+    <script>
+        let imageUrls = [];
+        let recentlyRatedImages = [];
+
+        // Fetch URLs from the server-side JSON file
+        async function loadImageUrls() {
+            try {
+                const response = await fetch('/images.json');
+                const data = await response.json();
+                imageUrls = data.images;
+                displayRandomImage();
+            } catch (error) {
+                console.error("Error fetching images:", error);
+            }
+        }
+
+        // Select a random image URL that hasn't been recently rated
+        function getRandomImage() {
+            let randomImage;
+            do {
+                randomImage = imageUrls[Math.floor(Math.random() * imageUrls.length)];
+            } while (recentlyRatedImages.includes(randomImage) && recentlyRatedImages.length < imageUrls.length);
+
+            return randomImage;
+        }
+
+        // Display a random image
+        function displayRandomImage() {
+            if (imageUrls.length === 0) return;
+
+            const imageElement = document.getElementById("randomImage");
+            const randomImage = getRandomImage();
+            imageElement.src = randomImage;
+            imageElement.dataset.url = randomImage; // Store URL in data attribute
+        }
+
+        // Send rating back to server and display new image
+        async function rateImage(rating) {
+            const imageUrl = document.getElementById("randomImage").dataset.url;
+
+            try {
+                await fetch('/save-rating', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        imageUrl: imageUrl,
+                        rating: rating
+                    })
+                });
+
+                // Add this image to the list of recently rated images
+                recentlyRatedImages.push(imageUrl);
+                if (recentlyRatedImages.length > 5) { // Adjust the number as needed
+                    recentlyRatedImages.shift();
+                }
+
+                // Display a new random image
+                displayRandomImage();
+            } catch (error) {
+                console.error("Error saving rating:", error);
+            }
+        }
+
+        // Load image URLs when the page loads
+        window.onload = loadImageUrls;
+    </script>
+
+</body>
+</html>
