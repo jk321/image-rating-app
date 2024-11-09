@@ -1,43 +1,70 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
+const fetch = require('node-fetch'); // Ensure you have node-fetch installed: npm install node-fetch
 const app = express();
 app.use(express.json());
 
-// Serve static HTML files
-app.use(express.static('public'));
+const JSONBIN_URL = "https://api.jsonbin.io/v3/b/672f186cacd3cb34a8a5719e"; // Replace with your JSONbin URL
+const JSONBIN_API_KEY = "YOUR_API_KEY"; // Replace with your actual JSONbin API key
 
-// Serve images.json
-app.get('/images.json', (req, res) => {
-    fs.readFile('images.json', 'utf8', (err, data) => {
-        if (err) {
-            return res.status(500).send("Error loading images.");
+// Fetch data from JSONbin (GET request)
+async function fetchImageData() {
+    const response = await fetch(JSONBIN_URL, {
+        method: 'GET',
+        headers: {
+            'X-Master-Key': JSONBIN_API_KEY,
+            'Content-Type': 'application/json'
         }
-        res.send(JSON.parse(data));
     });
+    const data = await response.json();
+    return data.record; // JSONbin returns data under `record`
+}
+
+// Save updated data to JSONbin (PUT request)
+async function saveImageData(updatedData) {
+    await fetch(JSONBIN_URL, {
+        method: 'PUT',
+        headers: {
+            'X-Master-Key': JSONBIN_API_KEY,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedData)
+    });
+}
+
+// Endpoint to serve images and ratings data to the client
+app.get('/images.json', async (req, res) => {
+    try {
+        const data = await fetchImageData();
+        res.json(data);
+    } catch (error) {
+        console.error("Error fetching data from JSONbin:", error);
+        res.status(500).send("Error loading images.");
+    }
 });
 
-// Save rating endpoint
-app.post('/save-rating', (req, res) => {
+// Endpoint to save a rating
+app.post('/save-rating', async (req, res) => {
     const { imageUrl, rating } = req.body;
-    fs.readFile('images.json', 'utf8', (err, data) => {
-        if (err) {
-            return res.status(500).send("Error reading file.");
-        }
-           const jsonData = JSON.parse(data);
-           jsonData.ratings[imageUrl] = rating; // Save the rating for the image URL
 
-           fs.writeFile('images.json', JSON.stringify(jsonData, null, 2), (err) => {
-               if (err) {
-                   return res.status(500).send("Error saving rating.");
-               }
-               res.status(200).send("Rating saved.");
-           });
-       });
-   });
+    try {
+        // Fetch current data
+        const data = await fetchImageData();
 
-   // Start server
-   const PORT = 3000;
-   app.listen(PORT, () => {
-       console.log(`Server running at http://localhost:${PORT}`);
-   });
+        // Update the ratings object with the new rating
+        data.ratings[imageUrl] = rating;
+
+        // Save the updated data back to JSONbin
+        await saveImageData(data);
+
+        res.status(200).send("Rating saved.");
+    } catch (error) {
+        console.error("Error saving rating to JSONbin:", error);
+        res.status(500).send("Error saving rating.");
+    }
+});
+
+// Start server
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+});
