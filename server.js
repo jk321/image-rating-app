@@ -4,7 +4,7 @@ const app = express();
 app.use(express.json());
 
 const JSONBIN_URL = "https://api.jsonbin.io/v3/b/672f186cacd3cb34a8a5719e"; // Replace with your JSONbin URL
-const JSONBIN_API_KEY = "YOUR_API_KEY"; // Replace with your actual JSONbin API key
+const JSONBIN_API_KEY = "$2a$10$MdwYAZYXN9M/Jz0w9BElsuBskCOGuLZCRh84cO.ALPjTImhQ3Eu.i"; // Replace with your actual JSONbin API key
 
 // Fetch data from JSONbin (GET request)
 async function fetchImageData() {
