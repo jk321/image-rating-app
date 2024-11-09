@@ -1,10 +1,14 @@
 const express = require('express');
-const fetch = require('node-fetch'); // Ensure you have node-fetch installed: npm install node-fetch
+const fetch = require('node-fetch');
 const app = express();
 app.use(express.json());
 
-const JSONBIN_URL = "https://api.jsonbin.io/v3/b/672f186cacd3cb34a8a5719e"; // Replace with your JSONbin URL
-const JSONBIN_API_KEY = "$2a$10$MdwYAZYXN9M/Jz0w9BElsuBskCOGuLZCRh84cO.ALPjTImhQ3Eu.i"; // Replace with your actual JSONbin API key
+// Serve static files from the "public" directory
+app.use(express.static('public'));
+
+// JSONbin settings
+const JSONBIN_URL = "https://api.jsonbin.io/v3/b/672f186cacd3cb34a8a5719e";
+const JSONBIN_API_KEY = "YOUR_API_KEY";
 
 // Fetch data from JSONbin (GET request)
 async function fetchImageData() {
@@ -16,7 +20,7 @@ async function fetchImageData() {
         }
     });
     const data = await response.json();
-    return data.record; // JSONbin returns data under `record`
+    return data.record;
 }
 
 // Save updated data to JSONbin (PUT request)
@@ -47,13 +51,9 @@ app.post('/save-rating', async (req, res) => {
     const { imageUrl, rating } = req.body;
 
     try {
-        // Fetch current data
         const data = await fetchImageData();
-
-        // Update the ratings object with the new rating
         data.ratings[imageUrl] = rating;
 
-        // Save the updated data back to JSONbin
         await saveImageData(data);
 
         res.status(200).send("Rating saved.");
@@ -64,7 +64,7 @@ app.post('/save-rating', async (req, res) => {
 });
 
 // Start server
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
